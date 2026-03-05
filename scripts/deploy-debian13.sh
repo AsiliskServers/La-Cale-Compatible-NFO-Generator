@@ -34,12 +34,12 @@ if [[ ! -f "${ENV_EXAMPLE_SOURCE}" ]]; then
   exit 1
 fi
 
-if ! id -u "${APP_USER}" >/dev/null 2>&1; then
-  useradd --system --create-home --home-dir "${APP_DIR}" --shell /usr/sbin/nologin "${APP_USER}"
-fi
-
 if ! getent group "${APP_GROUP}" >/dev/null 2>&1; then
   groupadd --system "${APP_GROUP}"
+fi
+
+if ! id -u "${APP_USER}" >/dev/null 2>&1; then
+  useradd --system --create-home --home-dir "${APP_DIR}" --shell /usr/sbin/nologin -g "${APP_GROUP}" "${APP_USER}"
 fi
 
 if ! id -nG "${APP_USER}" | tr ' ' '\n' | grep -qx "${APP_GROUP}"; then
