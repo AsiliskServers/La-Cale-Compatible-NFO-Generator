@@ -1,0 +1,26 @@
+[Unit]
+Description=La-Cale Compatible NFO Generator
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nfo-generator
+Group=nfo-generator
+WorkingDirectory=/opt/La-Cale-Compatible-NFO-Generator
+EnvironmentFile=-/etc/la-cale-compatible-nfo-generator.env
+Environment=NODE_ENV=production
+Environment=PORT=8787
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=3
+TimeoutStopSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/tmp
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

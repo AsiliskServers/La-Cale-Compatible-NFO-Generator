@@ -1,0 +1,10 @@
+services:
+  nfo-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '8787:8787'
+    environment:
+      PORT: '8787'
+      MEDIAINFO_OUTPUT_PROFILE: 'standard'
