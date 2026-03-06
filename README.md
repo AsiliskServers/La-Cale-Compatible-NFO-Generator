@@ -1,7 +1,7 @@
 # NFO Generator Web
 
 Application web pour generer un NFO complet depuis un fichier video (drag-and-drop).
-
+https://app.asilisk.fr/nfo
 ## Fonctionnalites
 
 - Drag-and-drop ou selection de fichier video (`mkv`, `mp4`, `avi`, etc.)
