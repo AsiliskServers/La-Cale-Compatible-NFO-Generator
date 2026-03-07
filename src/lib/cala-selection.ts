@@ -36,20 +36,21 @@ const normalizeText = (value: string): string =>
 
 const detectSection = (headerLine: string): keyof ParsedMediaInfo | 'menu' | null => {
   const normalized = normalizeText(headerLine).replace(/\s*#\d+$/, '')
+  const compact = normalized.replace(/[^a-z0-9]/g, '')
 
-  if (normalized === 'general') {
+  if (compact === 'general' || compact === 'gnral') {
     return 'general'
   }
-  if (normalized === 'video') {
+  if (compact === 'video' || compact === 'vido') {
     return 'video'
   }
-  if (normalized === 'audio') {
+  if (compact === 'audio') {
     return 'audio'
   }
-  if (normalized === 'text' || normalized === 'texte') {
+  if (compact === 'text' || compact === 'texte') {
     return 'text'
   }
-  if (normalized === 'menu') {
+  if (compact === 'menu') {
     return 'menu'
   }
 
@@ -242,14 +243,23 @@ export const buildCalaSelection = (file: File, rawNfo: string): CalaSelection =>
   }
 
   const extension = getFileExtension(file.name).toLowerCase()
-  if (extension === 'mkv') {
-    addSelectionValue(selection, 'Extension', 'MKV')
-  } else if (extension === 'mp4') {
-    addSelectionValue(selection, 'Extension', 'MP4')
-  } else if (extension === 'avi') {
-    addSelectionValue(selection, 'Extension', 'AVI')
-  } else if (extension === 'iso') {
-    addSelectionValue(selection, 'Extension', 'ISO')
+  const extensionMap: Record<string, string> = {
+    mkv: 'MKV',
+    mp4: 'MP4',
+    avi: 'AVI',
+    iso: 'ISO',
+    mov: 'MOV',
+    m4v: 'M4V',
+    wmv: 'WMV',
+    flv: 'FLV',
+    webm: 'WEBM',
+    mpeg: 'MPEG',
+    mpg: 'MPG',
+    ts: 'TS',
+    m2ts: 'M2TS',
+  }
+  if (extensionMap[extension]) {
+    addSelectionValue(selection, 'Extension', extensionMap[extension])
   }
 
   if (/pre[\s._-]*active/.test(normalizedFileName)) {
@@ -311,7 +321,18 @@ export const buildCalaSelection = (file: File, rawNfo: string): CalaSelection =>
   const videoIdentity = normalizeText(
     [
       file.name,
-      ...getTrackValuesByKeyTerms(firstVideoTrack, ['format', 'codec', 'profile', 'profil']),
+      rawNfo,
+      ...getTrackValuesByKeyTerms(firstVideoTrack, [
+        'format',
+        'codec',
+        'codec id',
+        'profile',
+        'profil',
+        'nom commercial',
+        'commercial name',
+        'writing library',
+        'encoded library',
+      ]),
     ].join(' '),
   )
 
@@ -321,12 +342,22 @@ export const buildCalaSelection = (file: File, rawNfo: string): CalaSelection =>
     addSelectionValue(selection, 'Codec video', 'AV1')
   } else if (/(hevc|h265|x265)/.test(videoIdentity)) {
     addSelectionValue(selection, 'Codec video', 'HEVC/H265/x265')
-  } else if (/(avc|h264|x264)/.test(videoIdentity)) {
+  } else if (/(avc|avc1|h264|x264)/.test(videoIdentity)) {
     addSelectionValue(selection, 'Codec video', 'AVC/H264/x264')
+  } else if (/(xvid|divx|dx50)/.test(videoIdentity)) {
+    addSelectionValue(selection, 'Codec video', 'MPEG-4 ASP')
+  } else if (/(prores|apch|apcn|apcs|apco|ap4h|ap4x)/.test(videoIdentity)) {
+    addSelectionValue(selection, 'Codec video', 'ProRes')
+  } else if (/(^|[^a-z0-9])vp8([^a-z0-9]|$)/.test(videoIdentity)) {
+    addSelectionValue(selection, 'Codec video', 'VP8')
   } else if (/vc-?1/.test(videoIdentity)) {
     addSelectionValue(selection, 'Codec video', 'VC-1')
   } else if (/(^|[^a-z0-9])vp9([^a-z0-9]|$)/.test(videoIdentity)) {
     addSelectionValue(selection, 'Codec video', 'VP9')
+  } else if (/mjpeg/.test(videoIdentity)) {
+    addSelectionValue(selection, 'Codec video', 'MJPEG')
+  } else if (/theora/.test(videoIdentity)) {
+    addSelectionValue(selection, 'Codec video', 'Theora')
   } else if (/mpeg/.test(videoIdentity)) {
     addSelectionValue(selection, 'Codec video', 'MPEG')
   }
@@ -431,6 +462,15 @@ export const buildCalaSelection = (file: File, rawNfo: string): CalaSelection =>
 
     if (/flac/.test(audioIdentity)) {
       addSelectionValue(selection, 'Codec audio', 'FLAC')
+    }
+    if (/alac/.test(audioIdentity)) {
+      addSelectionValue(selection, 'Codec audio', 'ALAC')
+    }
+    if (/vorbis/.test(audioIdentity)) {
+      addSelectionValue(selection, 'Codec audio', 'Vorbis')
+    }
+    if (/wma/.test(audioIdentity)) {
+      addSelectionValue(selection, 'Codec audio', 'WMA')
     }
     if (/(^|[^a-z0-9])mp3([^a-z0-9]|$)/.test(audioIdentity)) {
       addSelectionValue(selection, 'Codec audio', 'MP3')
@@ -561,6 +601,12 @@ export const buildCalaSelection = (file: File, rawNfo: string): CalaSelection =>
   if (!selection['Source / Type']?.length) {
     if (/bluray/.test(normalizedRaw)) {
       addSelectionValue(selection, 'Source / Type', 'BluRay')
+    } else if (/remux/.test(normalizedRaw)) {
+      addSelectionValue(selection, 'Source / Type', 'REMUX')
+    } else if (/dvd/.test(normalizedRaw)) {
+      addSelectionValue(selection, 'Source / Type', 'DVDRip')
+    } else if (/(^|[.\-_ ])tv(rip)?($|[.\-_ ])|hdtv/.test(normalizedRaw)) {
+      addSelectionValue(selection, 'Source / Type', 'TV')
     } else if (/web/.test(normalizedRaw)) {
       addSelectionValue(selection, 'Source / Type', 'WEB-DL')
     }

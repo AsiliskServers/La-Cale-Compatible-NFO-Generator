@@ -63,7 +63,7 @@ Le front Vite proxy automatiquement `/api` vers `http://localhost:8787`.
 
 Variables d'environnement backend utiles:
 - `MEDIAINFO_BINARY` (defaut: `mediainfo`)
-- `MEDIAINFO_LANGUAGE` (defaut: `file://<projet>/resources/mediainfo-fr.csv`, mettre `auto` pour la langue systeme, ou `raw`)
+- `MEDIAINFO_LANGUAGE` (defaut: `fr`, mettre `auto` pour la langue systeme, ou un `file://...` si tu veux un CSV perso)
 - `MEDIAINFO_OUTPUT_PROFILE` (defaut: `standard`, option: `full`)
 - `MEDIAINFO_TIMEOUT_MS` (defaut: `120000`)
 - `MAX_UPLOAD_SIZE_BYTES` (defaut: `26843545600` = 25 Gio)
@@ -161,7 +161,7 @@ Variables importantes:
 - `BASE_PATH` (ex: `/` ou `/nfo`)
 - `VITE_BASE_PATH` (ex: `/` ou `/nfo/`, utilise au build frontend)
 - `MEDIAINFO_BINARY` (defaut: `mediainfo`)
-- `MEDIAINFO_LANGUAGE` (defaut recommande: `file:///opt/La-Cale-Compatible-NFO-Generator/resources/mediainfo-fr.csv`)
+- `MEDIAINFO_LANGUAGE` (defaut recommande: `fr`)
 - `MEDIAINFO_OUTPUT_PROFILE` (`standard` ou `full`)
 - `MEDIAINFO_TIMEOUT_MS`
 - `MAX_UPLOAD_SIZE_BYTES`

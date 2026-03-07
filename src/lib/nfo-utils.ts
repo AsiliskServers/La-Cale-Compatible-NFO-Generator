@@ -51,20 +51,21 @@ type ParsedMediaInfo = {
 
 const detectSection = (headerLine: string): keyof ParsedMediaInfo | 'menu' | null => {
   const normalized = normalizeText(headerLine).replace(/\s*#\d+$/, '')
+  const compact = normalized.replace(/[^a-z0-9]/g, '')
 
-  if (normalized === 'general') {
+  if (compact === 'general' || compact === 'gnral') {
     return 'general'
   }
-  if (normalized === 'video') {
+  if (compact === 'video' || compact === 'vido') {
     return 'video'
   }
-  if (normalized === 'audio') {
+  if (compact === 'audio') {
     return 'audio'
   }
-  if (normalized === 'text' || normalized === 'texte') {
+  if (compact === 'text' || compact === 'texte') {
     return 'text'
   }
-  if (normalized === 'menu') {
+  if (compact === 'menu') {
     return 'menu'
   }
 

@@ -11,4 +11,5 @@ services:
       HOST: '0.0.0.0'
       PORT: '8787'
       BASE_PATH: ${BASE_PATH:-/}
+      MEDIAINFO_LANGUAGE: ${MEDIAINFO_LANGUAGE:-fr}
       MEDIAINFO_OUTPUT_PROFILE: 'standard'

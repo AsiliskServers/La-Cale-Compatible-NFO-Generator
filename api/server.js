@@ -15,7 +15,6 @@ const __dirname = path.dirname(__filename)
 const rootDir = path.resolve(__dirname, '..')
 const distDir = path.join(rootDir, 'dist')
 const uploadDir = path.join(os.tmpdir(), 'nfo-generator-uploads')
-const bundledFrenchLanguageFile = path.join(rootDir, 'resources', 'mediainfo-fr.csv')
 const languageProbeTarget = path.join(rootDir, 'package.json')
 
 await mkdir(uploadDir, { recursive: true })
@@ -92,10 +91,7 @@ const findWingetMediainfoBinary = () => {
 
 const mediainfoBinary =
   process.env.MEDIAINFO_BINARY?.trim() || findWingetMediainfoBinary() || 'mediainfo'
-const mediainfoLanguageDefault = existsSync(bundledFrenchLanguageFile)
-  ? `file://${bundledFrenchLanguageFile}`
-  : 'fr'
-const mediainfoLanguage = process.env.MEDIAINFO_LANGUAGE?.trim() || mediainfoLanguageDefault
+const mediainfoLanguage = process.env.MEDIAINFO_LANGUAGE?.trim() || 'fr'
 const mediainfoOutputProfile = (process.env.MEDIAINFO_OUTPUT_PROFILE?.trim() || 'standard').toLowerCase()
 const parsePositiveNumber = (value, fallback) => {
   const parsed = Number(value)
@@ -132,19 +128,46 @@ const withLanguageArg = (args) => {
   }
 }
 
+const buildMediainfoExecOptions = (maxBuffer, timeout) => ({
+  windowsHide: true,
+  timeout,
+  maxBuffer,
+  env: {
+    ...process.env,
+    LANG: process.env.LANG || 'C.UTF-8',
+    LC_ALL: process.env.LC_ALL || 'C.UTF-8',
+  },
+})
+
+const withSelectedLanguageArg = (args, language) => {
+  if (language.toLowerCase() !== 'auto') {
+    args.push(`--Language=${language}`)
+  }
+}
+
+const isLikelyMangledFrenchText = (text) => {
+  const normalized = text.toLowerCase()
+  return (
+    normalized.includes('g?n?ral') ||
+    normalized.includes('vid?o') ||
+    normalized.includes('dur?e') ||
+    normalized.includes('d?bit') ||
+    normalized.includes('interpr?te') ||
+    normalized.includes('utilis?e')
+  )
+}
+
 const isFrenchLanguageEnabled = async () => {
   if (!existsSync(languageProbeTarget)) {
     return null
   }
 
   const args = ['--Output=TEXT']
-  withLanguageArg(args)
+  withSelectedLanguageArg(args, mediainfoLanguage)
   args.push(languageProbeTarget)
 
   const { stdout } = await execFileAsync(mediainfoBinary, args, {
-    windowsHide: true,
-    timeout: 10_000,
-    maxBuffer: 1024 * 1024,
+    ...buildMediainfoExecOptions(1024 * 1024, 10_000),
   })
 
   const firstLine = stdout.split(/\r?\n/).find((line) => line.trim().length > 0) ?? ''
@@ -163,23 +186,37 @@ const upload = multer({
 })
 
 const runMediainfo = async (filePath) => {
-  const args = ['--Output=TEXT']
-  withLanguageArg(args)
+  const executeWithLanguage = async (language) => {
+    const args = ['--Output=TEXT']
+    withSelectedLanguageArg(args, language)
+    if (mediainfoOutputProfile === 'full') {
+      args.unshift('--Full')
+    }
+    args.push(filePath)
 
-  if (mediainfoOutputProfile === 'full') {
-    args.unshift('--Full')
+    const { stdout } = await execFileAsync(
+      mediainfoBinary,
+      args,
+      buildMediainfoExecOptions(32 * 1024 * 1024, commandTimeoutMs),
+    )
+
+    return stdout
   }
 
-  args.push(filePath)
-
-  const { stdout } = await execFileAsync(mediainfoBinary, args, {
-    windowsHide: true,
-    timeout: commandTimeoutMs,
-    maxBuffer: 32 * 1024 * 1024,
-  })
+  let stdout = await executeWithLanguage(mediainfoLanguage)
 
   if (!stdout?.trim()) {
     throw new Error('MediaInfo a retourn\u00e9 une sortie vide.')
+  }
+
+  if (
+    mediainfoLanguage.toLowerCase().startsWith('file://') &&
+    isLikelyMangledFrenchText(stdout)
+  ) {
+    const fallbackStdout = await executeWithLanguage('fr')
+    if (fallbackStdout?.trim() && !isLikelyMangledFrenchText(fallbackStdout)) {
+      stdout = fallbackStdout
+    }
   }
 
   return stdout
@@ -188,9 +225,7 @@ const runMediainfo = async (filePath) => {
 app.get('/api/health', async (_req, res) => {
   try {
     const { stdout } = await execFileAsync(mediainfoBinary, ['--Version'], {
-      windowsHide: true,
-      timeout: 10_000,
-      maxBuffer: 1024 * 1024,
+      ...buildMediainfoExecOptions(1024 * 1024, 10_000),
     })
     const frenchLanguageEnabled = await isFrenchLanguageEnabled()
 

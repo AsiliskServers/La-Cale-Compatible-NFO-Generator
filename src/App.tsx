@@ -61,6 +61,7 @@ function App() {
   const [errorMessage, setErrorMessage] = useState('')
   const [copiedNfo, setCopiedNfo] = useState(false)
   const [copiedBbcode, setCopiedBbcode] = useState(false)
+  const [isCalaModalOpen, setIsCalaModalOpen] = useState(false)
 
   const nfoPreview = useMemo(() => buildNfoPreview(rawNfo, teamName), [rawNfo, teamName])
   const bbcodePreview = useMemo(
@@ -104,6 +105,21 @@ function App() {
       window.clearTimeout(timeoutId)
     }
   }, [apiBase])
+
+  useEffect(() => {
+    if (!isCalaModalOpen) {
+      return
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsCalaModalOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isCalaModalOpen])
 
   const analyzeInBrowser = async (file: File): Promise<string> => {
     const mediaInfo = await MediaInfoFactory({
@@ -156,6 +172,7 @@ function App() {
     setTeamName(extractTeamName(file.name))
     setRawNfo('')
     setCalaSelection(null)
+    setIsCalaModalOpen(false)
     setCopiedNfo(false)
     setCopiedBbcode(false)
     setErrorMessage('')
@@ -266,6 +283,11 @@ function App() {
     }
 
     setCalaSelection(buildCalaSelection(selectedFile, rawNfo))
+    setIsCalaModalOpen(true)
+  }
+
+  const closeCalaModal = (): void => {
+    setIsCalaModalOpen(false)
   }
 
   const clearOutput = (): void => {
@@ -274,6 +296,7 @@ function App() {
     setRawNfo('')
     setTeamName('')
     setCalaSelection(null)
+    setIsCalaModalOpen(false)
     setErrorMessage('')
     setCopiedNfo(false)
     setCopiedBbcode(false)
@@ -438,10 +461,27 @@ function App() {
             </div>
           )}
 
-          <div className="cala-panel">
+        </section>
+      </main>
+
+      {isCalaModalOpen ? (
+        <div
+          className="modal-backdrop"
+          onClick={closeCalaModal}
+          role="presentation"
+        >
+          <section
+            className="cala-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="S\u00e9lection La-Cale"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="cala-header">
               <h3>S&eacute;lection La-Cale</h3>
-              <span>{calaSelection ? 'G\u00e9n\u00e9r\u00e9e' : 'En attente'}</span>
+              <button type="button" className="modal-close" onClick={closeCalaModal}>
+                Fermer
+              </button>
             </div>
 
             {calaSelection ? (
@@ -472,13 +512,12 @@ function App() {
               </div>
             ) : (
               <p className="cala-empty">
-                Clique sur &quot;S&eacute;lection La-Cale&quot; pour g&eacute;n&eacute;rer les cases
-                &agrave; cocher.
+                Aucune donn\u00e9e de s\u00e9lection disponible.
               </p>
             )}
-          </div>
-        </section>
-      </main>
+          </section>
+        </div>
+      ) : null}
     </div>
   )
 }
