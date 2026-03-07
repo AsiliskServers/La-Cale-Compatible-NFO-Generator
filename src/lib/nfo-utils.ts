@@ -208,7 +208,7 @@ const mapLanguageLabel = (value: string): string | null => {
     tokens.has('fra') ||
     tokens.has('fre')
   ) {
-    return 'Francais'
+    return 'Fran\u00e7ais'
   }
   if (
     normalized.includes('english') ||
@@ -240,7 +240,7 @@ const mapLanguageLabel = (value: string): string | null => {
     tokens.has('ko') ||
     tokens.has('kor')
   ) {
-    return 'Coreen'
+    return 'Cor\u00e9en'
   }
   if (
     normalized.includes('chinese') ||
@@ -516,13 +516,13 @@ const detectAudioLanguages = (audioTracks: TrackFields[], fileName: string): str
       const mapped = mapLanguageLabel(languageValue)
       if (mapped) {
         baseLanguageSet.add(mapped)
-        if (mapped === 'Francais') {
+        if (mapped === 'Fran\u00e7ais') {
           if (trackHasVff) {
-            addLabel('Francais (VFF)')
+            addLabel('Fran\u00e7ais (VFF)')
           } else if (trackHasVfq) {
-            addLabel('Francais (VFQ)')
+            addLabel('Fran\u00e7ais (VFQ)')
           } else {
-            addLabel('Francais')
+            addLabel('Fran\u00e7ais')
           }
         } else {
           addLabel(mapped)
@@ -533,10 +533,10 @@ const detectAudioLanguages = (audioTracks: TrackFields[], fileName: string): str
 
   if (labels.length === 0) {
     if (fileHasVff) {
-      return 'Francais (VFF)'
+      return 'Fran\u00e7ais (VFF)'
     }
     if (fileHasVfq) {
-      return 'Francais (VFQ)'
+      return 'Fran\u00e7ais (VFQ)'
     }
     return '-'
   }
@@ -572,8 +572,8 @@ const detectSubtitleLanguages = (textTracks: TrackFields[]): string => {
   const labels = Array.from(languageSet)
   if (labels.length === 1) {
     const singleLanguage = labels[0] ?? ''
-    if (singleLanguage === 'Francais' && textTracks.length > 1) {
-      return 'Francais (Complet)'
+    if (singleLanguage === 'Fran\u00e7ais' && textTracks.length > 1) {
+      return 'Fran\u00e7ais (Complet)'
     }
 
     return singleLanguage
@@ -646,9 +646,9 @@ export const buildBbcodePreview = (rawNfo: string, file: File | null): string =>
   const size = formatBytesToGo(fileSizeValue)
 
   return [
-    `[b]Qualite :[/b] ${quality}`,
+    `[b]Qualit\u00e9 :[/b] ${quality}`,
     `[b]Format :[/b] ${format}`,
-    `[b]Codec Video :[/b] ${videoCodec}`,
+    `[b]Codec Vid\u00e9o :[/b] ${videoCodec}`,
     `[b]Codec Audio :[/b] ${audioCodec}`,
     `[b]Langues :[/b] ${languages}`,
     `[b]Sous-titres :[/b] ${subtitles}`,

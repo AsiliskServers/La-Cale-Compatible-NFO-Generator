@@ -73,7 +73,7 @@ function App() {
 
     const checkServer = async () => {
       try {
-        const response = await fetch('/api/health', { signal: controller.signal })
+        const response = await fetch('api/health', { signal: controller.signal })
         if (!response.ok) {
           setServerAvailable(false)
           setServerFrenchReady(null)
@@ -130,7 +130,7 @@ function App() {
     const formData = new FormData()
     formData.append('video', file)
 
-    const response = await fetch('/api/mediainfo/full', {
+    const response = await fetch('api/mediainfo/full', {
       method: 'POST',
       body: formData,
     })
@@ -141,7 +141,7 @@ function App() {
 
     const payload = (await response.json()) as { text?: string }
     if (!payload.text) {
-      throw new Error("Reponse serveur invalide: aucun texte MediaInfo recu.")
+      throw new Error('R\u00e9ponse serveur invalide : aucun texte MediaInfo re\u00e7u.')
     }
 
     return payload.text
@@ -163,7 +163,7 @@ function App() {
     if (!isLikelyVideoFileName(file.name)) {
       setIsAnalyzing(false)
       setErrorMessage(
-        'Format non reconnu comme video. Depose un fichier video (mkv, mp4, avi, mov, m2ts...).',
+        'Format non reconnu comme vid\u00e9o. D\u00e9pose un fichier vid\u00e9o (mkv, mp4, avi, mov, m2ts...).',
       )
       return
     }
@@ -223,7 +223,7 @@ function App() {
       setCopiedNfo(true)
       setCopiedBbcode(false)
     } catch (error) {
-      setErrorMessage('Impossible de copier automatiquement. Copie manuelle recommandee.')
+      setErrorMessage('Impossible de copier automatiquement. Copie manuelle recommand\u00e9e.')
       console.error(error)
     }
   }
@@ -238,7 +238,7 @@ function App() {
       setCopiedBbcode(true)
       setCopiedNfo(false)
     } catch (error) {
-      setErrorMessage('Impossible de copier automatiquement. Copie manuelle recommandee.')
+      setErrorMessage('Impossible de copier automatiquement. Copie manuelle recommand\u00e9e.')
       console.error(error)
     }
   }
@@ -284,8 +284,8 @@ function App() {
       ? 'Analyse serveur en cours...'
       : 'Analyse locale en cours...'
     : selectedFile
-      ? 'Fichier pret'
-      : 'Aucun fichier selectionne'
+      ? 'Fichier pr\u00eat'
+      : 'Aucun fichier s\u00e9lectionn\u00e9'
 
   return (
     <div className="app-shell">
@@ -294,10 +294,10 @@ function App() {
 
       <header className="hero">
         <p className="eyebrow">NFO Generator</p>
-        <h1>Generateur NFO video</h1>
+        <h1>G\u00e9n\u00e9rateur NFO vid\u00e9o</h1>
         <p className="subtitle">
-          Depose un fichier video pour generer un NFO complet: general, video, audio, sous-titres
-          et menu.
+          D\u00e9pose un fichier vid\u00e9o pour g\u00e9n\u00e9rer un NFO complet : g\u00e9n\u00e9ral,
+          vid\u00e9o, audio, sous-titres et menu.
         </p>
       </header>
 
@@ -327,17 +327,17 @@ function App() {
             </div>
             <p className="engine-hint">
               {engineMode === 'browser'
-                ? 'Aucun upload: analyse 100% locale.'
+                ? 'Aucun upload : analyse 100% locale.'
                 : "Upload temporaire vers l'API MediaInfo CLI pour un rendu proche du logiciel."}
             </p>
             <p className="engine-health">
               {serverAvailable === null
-                ? 'Verification API en cours...'
+                ? 'V\u00e9rification API en cours...'
                 : serverAvailable
                   ? serverFrenchReady === false
                     ? 'API OK, mais langue FR inactive sur le serveur.'
                     : 'API OK, moteur serveur actif.'
-                  : 'API indisponible: mode navigateur uniquement.'}
+                  : 'API indisponible : mode navigateur uniquement.'}
             </p>
           </div>
 
@@ -367,9 +367,9 @@ function App() {
               onChange={handleInputChange}
             />
             <p className="dropzone-title">
-              {isAnalyzing ? 'Analyse du media...' : 'Glisse-depose un fichier video'}
+              {isAnalyzing ? 'Analyse du m\u00e9dia...' : 'Glisse-d\u00e9pose un fichier vid\u00e9o'}
             </p>
-            <p className="dropzone-subtitle">ou clique pour selectionner un fichier</p>
+            <p className="dropzone-subtitle">ou clique pour s\u00e9lectionner un fichier</p>
           </div>
 
           <div className="meta-row">
@@ -397,19 +397,19 @@ function App() {
 
           <div className="actions">
             <button type="button" onClick={handleCopyNfo} disabled={!nfoPreview || isAnalyzing}>
-              {copiedNfo ? 'NFO copie' : 'Copier le NFO'}
+              {copiedNfo ? 'NFO copi\u00e9' : 'Copier le NFO'}
             </button>
             <button type="button" onClick={handleCopyBbcode} disabled={!bbcodePreview || isAnalyzing}>
-              {copiedBbcode ? 'BBCode copie' : 'Copier BBCode'}
+              {copiedBbcode ? 'BBCode copi\u00e9' : 'Copier BBCode'}
             </button>
             <button type="button" onClick={handleDownload} disabled={!nfoPreview || isAnalyzing}>
-              Telecharger .nfo
+              T\u00e9l\u00e9charger .nfo
             </button>
             <button type="button" onClick={handleCalaSelection} disabled={!rawNfo || isAnalyzing}>
-              Selection La-Cale
+              S\u00e9lection La-Cale
             </button>
             <button type="button" className="button-ghost" onClick={clearOutput}>
-              Reinitialiser
+              R\u00e9initialiser
             </button>
           </div>
 
@@ -420,7 +420,7 @@ function App() {
           <div className="panel-header">
             <h2>Rendu NFO</h2>
             <span>
-              {nfoPreview ? `${nfoPreview.length.toLocaleString('fr-FR')} caracteres` : 'En attente'}
+              {nfoPreview ? `${nfoPreview.length.toLocaleString('fr-FR')} caract\u00e8res` : 'En attente'}
             </span>
           </div>
 
@@ -428,19 +428,19 @@ function App() {
             <pre className="nfo-preview">{nfoPreview}</pre>
           ) : (
             <div className="empty-state">
-              <p>Le rendu apparait ici des qu&apos;un fichier est analyse.</p>
+              <p>Le rendu appara\u00eet ici d\u00e8s qu&apos;un fichier est analys\u00e9.</p>
               <p>
                 {engineMode === 'browser'
-                  ? 'La generation est locale dans ton navigateur.'
-                  : "La generation passe par l'API serveur MediaInfo CLI."}
+                  ? 'La g\u00e9n\u00e9ration est locale dans ton navigateur.'
+                  : "La g\u00e9n\u00e9ration passe par l'API serveur MediaInfo CLI."}
               </p>
             </div>
           )}
 
           <div className="cala-panel">
             <div className="cala-header">
-              <h3>Selection La-Cale</h3>
-              <span>{calaSelection ? 'Generee' : 'En attente'}</span>
+              <h3>S\u00e9lection La-Cale</h3>
+              <span>{calaSelection ? 'G\u00e9n\u00e9r\u00e9e' : 'En attente'}</span>
             </div>
 
             {calaSelection ? (
@@ -460,7 +460,7 @@ function App() {
                         ) : (
                           <span className="cala-empty">
                             {CALA_MANUAL_CATEGORIES.has(category)
-                              ? 'A completer manuellement'
+                              ? '\u00c0 compl\u00e9ter manuellement'
                               : '-'}
                           </span>
                         )}
@@ -471,7 +471,8 @@ function App() {
               </div>
             ) : (
               <p className="cala-empty">
-                Clique sur &quot;Selection La-Cale&quot; pour generer les cases a cocher.
+                Clique sur &quot;S\u00e9lection La-Cale&quot; pour g\u00e9n\u00e9rer les cases \u00e0
+                cocher.
               </p>
             )}
           </div>

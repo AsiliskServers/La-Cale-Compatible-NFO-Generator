@@ -3,8 +3,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_BASE_PATH: ${VITE_BASE_PATH:-/}
     ports:
       - '8787:8787'
     environment:
       PORT: '8787'
+      BASE_PATH: ${BASE_PATH:-/}
       MEDIAINFO_OUTPUT_PROFILE: 'standard'

@@ -23,6 +23,27 @@ await mkdir(uploadDir, { recursive: true })
 const app = express()
 app.disable('x-powered-by')
 
+const normalizeBasePath = (value) => {
+  const raw = String(value ?? '').trim()
+  if (!raw || raw === '/') {
+    return '/'
+  }
+
+  const trimmed = raw.replace(/^\/+|\/+$/g, '')
+  return trimmed ? `/${trimmed}` : '/'
+}
+
+const basePath = normalizeBasePath(process.env.BASE_PATH)
+
+if (basePath !== '/') {
+  app.use((req, _res, next) => {
+    if (req.url === basePath || req.url.startsWith(`${basePath}/`)) {
+      req.url = req.url.slice(basePath.length) || '/'
+    }
+    next()
+  })
+}
+
 const findWingetMediainfoBinary = () => {
   const localAppData = process.env.LOCALAPPDATA
   if (!localAppData) {
@@ -145,7 +166,7 @@ const runMediainfo = async (filePath) => {
   })
 
   if (!stdout?.trim()) {
-    throw new Error('MediaInfo a retourne une sortie vide.')
+    throw new Error('MediaInfo a retourn\u00e9 une sortie vide.')
   }
 
   return stdout
@@ -183,7 +204,7 @@ app.post('/api/mediainfo/full', upload.single('video'), async (req, res) => {
   const uploadedFile = req.file
   if (!uploadedFile) {
     res.status(400).json({
-      error: "Aucun fichier recu. Envoie un champ multipart 'video'.",
+      error: "Aucun fichier re\u00e7u. Envoie un champ multipart 'video'.",
     })
     return
   }
@@ -217,4 +238,5 @@ app.listen(port, () => {
   console.log(`[nfo-api] mediainfo binary: ${mediainfoBinary}`)
   console.log(`[nfo-api] mediainfo language: ${mediainfoLanguage}`)
   console.log(`[nfo-api] mediainfo output profile: ${mediainfoOutputProfile}`)
+  console.log(`[nfo-api] base path: ${basePath}`)
 })

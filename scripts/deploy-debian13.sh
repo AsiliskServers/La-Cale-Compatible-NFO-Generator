@@ -48,6 +48,18 @@ fi
 
 install -d -o "${APP_USER}" -g "${APP_GROUP}" "${APP_DIR}"
 
+if [[ ! -f "${ENV_FILE}" ]]; then
+  install -m 0644 "${ENV_EXAMPLE_SOURCE}" "${ENV_FILE}"
+  echo "Created ${ENV_FILE} from example. Review values before public exposure."
+fi
+
+set -a
+# shellcheck source=/dev/null
+source "${ENV_FILE}"
+set +a
+
+BUILD_BASE_PATH="${VITE_BASE_PATH:-${BASE_PATH:-/}}"
+
 echo "[1/4] Syncing project to ${APP_DIR}..."
 rsync -a --delete \
   --exclude='node_modules' \
@@ -60,15 +72,10 @@ rsync -a --delete \
 chown -R "${APP_USER}:${APP_GROUP}" "${APP_DIR}"
 
 echo "[2/4] Installing dependencies and building..."
-su -s /bin/bash - "${APP_USER}" -c "cd \"${APP_DIR}\" && npm ci && npm run build && npm prune --omit=dev"
+su -s /bin/bash - "${APP_USER}" -c "cd \"${APP_DIR}\" && VITE_BASE_PATH=\"${BUILD_BASE_PATH}\" npm ci && VITE_BASE_PATH=\"${BUILD_BASE_PATH}\" npm run build && npm prune --omit=dev"
 
 echo "[3/4] Installing systemd service..."
 install -m 0644 "${SERVICE_SOURCE}" "/etc/systemd/system/${SERVICE_NAME}"
-
-if [[ ! -f "${ENV_FILE}" ]]; then
-  install -m 0644 "${ENV_EXAMPLE_SOURCE}" "${ENV_FILE}"
-  echo "Created ${ENV_FILE} from example. Review values before public exposure."
-fi
 
 echo "[4/4] Reloading and restarting service..."
 systemctl daemon-reload

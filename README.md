@@ -106,6 +106,15 @@ ou avec compose:
 docker compose up --build
 ```
 
+### Plesk + chemin `/nfo` (sans doublon `/nfo/nfo`)
+
+Dans `docker-compose.yml`, configure:
+- `VITE_BASE_PATH=/nfo/` (build frontend)
+- `BASE_PATH=/nfo` (runtime API/static)
+
+Le serveur supporte aussi `/` et le pr\u00e9fixe choisi, donc pas de redirection en boucle.
+Dans la Docker Proxy Rule Plesk, pointe simplement `/nfo` vers le conteneur (ne pas rajouter un second `/nfo` dans l'app).
+
 ## Debian 13 (production systemd)
 
 ### 1) Installer les prerequis systeme
@@ -145,6 +154,8 @@ Exemple fourni:
 
 Variables importantes:
 - `PORT` (defaut: `8787`)
+- `BASE_PATH` (ex: `/` ou `/nfo`)
+- `VITE_BASE_PATH` (ex: `/` ou `/nfo/`, utilise au build frontend)
 - `MEDIAINFO_BINARY` (defaut: `mediainfo`)
 - `MEDIAINFO_LANGUAGE` (defaut recommande: `file:///opt/La-Cale-Compatible-NFO-Generator/resources/mediainfo-fr.csv`)
 - `MEDIAINFO_OUTPUT_PROFILE` (`standard` ou `full`)
