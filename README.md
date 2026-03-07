@@ -132,6 +132,9 @@ Le script:
 - cree `/etc/la-cale-compatible-nfo-generator.env` (si absent)
 - active et redemarre le service
 
+Au redemarrage du service, un `git fetch/pull` est tente automatiquement avant le lancement de l'app,
+suivi d'un `npm ci && npm run build && npm prune --omit=dev` si un nouveau commit est detecte.
+
 ### 3) Configurer l'environnement
 
 Fichier par defaut:
@@ -147,6 +150,8 @@ Variables importantes:
 - `MEDIAINFO_OUTPUT_PROFILE` (`standard` ou `full`)
 - `MEDIAINFO_TIMEOUT_MS`
 - `MAX_UPLOAD_SIZE_BYTES`
+- `AUTO_UPDATE_GITHUB` (`true`/`false`, defaut: `true`)
+- `AUTO_UPDATE_BRANCH` (optionnel, defaut: branche courante puis `main`)
 
 Apres modification du `.env`:
 
@@ -159,6 +164,12 @@ sudo systemctl restart la-cale-compatible-nfo-generator.service
 ```bash
 sudo systemctl status la-cale-compatible-nfo-generator.service
 sudo journalctl -u la-cale-compatible-nfo-generator.service -f
+```
+
+Logs de mise a jour Git (au restart):
+
+```bash
+sudo journalctl -u la-cale-compatible-nfo-generator.service -g auto-update
 ```
 
 ## API

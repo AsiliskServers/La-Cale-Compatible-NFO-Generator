@@ -11,15 +11,17 @@ WorkingDirectory=/opt/La-Cale-Compatible-NFO-Generator
 EnvironmentFile=-/etc/la-cale-compatible-nfo-generator.env
 Environment=NODE_ENV=production
 Environment=PORT=8787
+ExecStartPre=-/usr/bin/env bash /opt/La-Cale-Compatible-NFO-Generator/scripts/update-from-github.sh
 ExecStart=/usr/bin/npm run start
 Restart=always
 RestartSec=3
+TimeoutStartSec=900
 TimeoutStopSec=20
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/tmp
+ReadWritePaths=/tmp /opt/La-Cale-Compatible-NFO-Generator
 LimitNOFILE=65535
 
 [Install]

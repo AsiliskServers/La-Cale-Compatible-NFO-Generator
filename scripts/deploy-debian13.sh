@@ -50,7 +50,6 @@ install -d -o "${APP_USER}" -g "${APP_GROUP}" "${APP_DIR}"
 
 echo "[1/4] Syncing project to ${APP_DIR}..."
 rsync -a --delete \
-  --exclude='.git' \
   --exclude='node_modules' \
   --exclude='dist' \
   --exclude='.idea' \
