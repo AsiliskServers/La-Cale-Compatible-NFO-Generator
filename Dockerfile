@@ -20,9 +20,9 @@ ENV PORT=8787
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-COPY api ./api
-COPY dist ./dist
-COPY resources ./resources
+COPY --from=build /app/api ./api
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/resources ./resources
 
 EXPOSE 8787
 CMD ["npm", "run", "start"]
