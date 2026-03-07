@@ -108,12 +108,16 @@ docker compose up --build
 
 ### Plesk + chemin `/nfo` (sans doublon `/nfo/nfo`)
 
-Dans `docker-compose.yml`, configure:
+Configuration conteneur:
+- `HOST=0.0.0.0`
 - `VITE_BASE_PATH=/nfo/` (build frontend)
 - `BASE_PATH=/nfo` (runtime API/static)
 
-Le serveur supporte aussi `/` et le pr\u00e9fixe choisi, donc pas de redirection en boucle.
-Dans la Docker Proxy Rule Plesk, pointe simplement `/nfo` vers le conteneur (ne pas rajouter un second `/nfo` dans l'app).
+Docker Proxy Rule Plesk:
+- Source path: `/nfo`
+- Target: `http://<container>:8787` (sans suffixe `/nfo`)
+
+Ne mets pas `/nfo` dans l'URL cible du proxy. Sinon tu obtiens `/nfo/nfo`.
 
 ## Debian 13 (production systemd)
 

@@ -35,14 +35,27 @@ const normalizeBasePath = (value) => {
 
 const basePath = normalizeBasePath(process.env.BASE_PATH)
 
-if (basePath !== '/') {
-  app.use((req, _res, next) => {
-    if (req.url === basePath || req.url.startsWith(`${basePath}/`)) {
-      req.url = req.url.slice(basePath.length) || '/'
+app.use((req, _res, next) => {
+  const prefixes = [basePath]
+  const forwardedPrefix = req.headers['x-forwarded-prefix']
+  if (typeof forwardedPrefix === 'string' && forwardedPrefix.trim()) {
+    prefixes.push(
+      ...forwardedPrefix
+        .split(',')
+        .map((entry) => normalizeBasePath(entry))
+        .filter((entry) => entry !== '/'),
+    )
+  }
+
+  for (const prefix of prefixes) {
+    if (prefix !== '/' && (req.url === prefix || req.url.startsWith(`${prefix}/`))) {
+      req.url = req.url.slice(prefix.length) || '/'
+      break
     }
-    next()
-  })
-}
+  }
+
+  next()
+})
 
 const findWingetMediainfoBinary = () => {
   const localAppData = process.env.LOCALAPPDATA
@@ -232,9 +245,10 @@ if (existsSync(distDir)) {
 }
 
 const port = Number(process.env.PORT || 8787)
+const host = process.env.HOST?.trim() || '0.0.0.0'
 
-app.listen(port, () => {
-  console.log(`[nfo-api] listening on http://localhost:${port}`)
+app.listen(port, host, () => {
+  console.log(`[nfo-api] listening on http://${host}:${port}`)
   console.log(`[nfo-api] mediainfo binary: ${mediainfoBinary}`)
   console.log(`[nfo-api] mediainfo language: ${mediainfoLanguage}`)
   console.log(`[nfo-api] mediainfo output profile: ${mediainfoOutputProfile}`)

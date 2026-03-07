@@ -8,6 +8,7 @@ services:
     ports:
       - '8787:8787'
     environment:
+      HOST: '0.0.0.0'
       PORT: '8787'
       BASE_PATH: ${BASE_PATH:-/}
       MEDIAINFO_OUTPUT_PROFILE: 'standard'

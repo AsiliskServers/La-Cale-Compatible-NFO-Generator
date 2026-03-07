@@ -47,6 +47,7 @@ const getErrorMessage = (error: unknown): string => {
 function App() {
   const inputRef = useRef<HTMLInputElement>(null)
   const analysisRunId = useRef(0)
+  const apiBase = import.meta.env.BASE_URL.replace(/\/+$/, '') + '/api'
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [rawNfo, setRawNfo] = useState('')
@@ -73,7 +74,7 @@ function App() {
 
     const checkServer = async () => {
       try {
-        const response = await fetch('api/health', { signal: controller.signal })
+        const response = await fetch(`${apiBase}/health`, { signal: controller.signal })
         if (!response.ok) {
           setServerAvailable(false)
           setServerFrenchReady(null)
@@ -102,7 +103,7 @@ function App() {
       controller.abort()
       window.clearTimeout(timeoutId)
     }
-  }, [])
+  }, [apiBase])
 
   const analyzeInBrowser = async (file: File): Promise<string> => {
     const mediaInfo = await MediaInfoFactory({
@@ -130,7 +131,7 @@ function App() {
     const formData = new FormData()
     formData.append('video', file)
 
-    const response = await fetch('api/mediainfo/full', {
+    const response = await fetch(`${apiBase}/mediainfo/full`, {
       method: 'POST',
       body: formData,
     })
@@ -294,10 +295,10 @@ function App() {
 
       <header className="hero">
         <p className="eyebrow">NFO Generator</p>
-        <h1>G\u00e9n\u00e9rateur NFO vid\u00e9o</h1>
+        <h1>G&eacute;n&eacute;rateur NFO vid&eacute;o</h1>
         <p className="subtitle">
-          D\u00e9pose un fichier vid\u00e9o pour g\u00e9n\u00e9rer un NFO complet : g\u00e9n\u00e9ral,
-          vid\u00e9o, audio, sous-titres et menu.
+          D&eacute;pose un fichier vid&eacute;o pour g&eacute;n&eacute;rer un NFO complet :
+          g&eacute;n&eacute;ral, vid&eacute;o, audio, sous-titres et menu.
         </p>
       </header>
 
@@ -369,7 +370,7 @@ function App() {
             <p className="dropzone-title">
               {isAnalyzing ? 'Analyse du m\u00e9dia...' : 'Glisse-d\u00e9pose un fichier vid\u00e9o'}
             </p>
-            <p className="dropzone-subtitle">ou clique pour s\u00e9lectionner un fichier</p>
+            <p className="dropzone-subtitle">ou clique pour s&eacute;lectionner un fichier</p>
           </div>
 
           <div className="meta-row">
@@ -403,13 +404,13 @@ function App() {
               {copiedBbcode ? 'BBCode copi\u00e9' : 'Copier BBCode'}
             </button>
             <button type="button" onClick={handleDownload} disabled={!nfoPreview || isAnalyzing}>
-              T\u00e9l\u00e9charger .nfo
+              T&eacute;l&eacute;charger .nfo
             </button>
             <button type="button" onClick={handleCalaSelection} disabled={!rawNfo || isAnalyzing}>
-              S\u00e9lection La-Cale
+              S&eacute;lection La-Cale
             </button>
             <button type="button" className="button-ghost" onClick={clearOutput}>
-              R\u00e9initialiser
+              R&eacute;initialiser
             </button>
           </div>
 
@@ -428,7 +429,7 @@ function App() {
             <pre className="nfo-preview">{nfoPreview}</pre>
           ) : (
             <div className="empty-state">
-              <p>Le rendu appara\u00eet ici d\u00e8s qu&apos;un fichier est analys\u00e9.</p>
+              <p>Le rendu appara&icirc;t ici d&egrave;s qu&apos;un fichier est analys&eacute;.</p>
               <p>
                 {engineMode === 'browser'
                   ? 'La g\u00e9n\u00e9ration est locale dans ton navigateur.'
@@ -439,7 +440,7 @@ function App() {
 
           <div className="cala-panel">
             <div className="cala-header">
-              <h3>S\u00e9lection La-Cale</h3>
+              <h3>S&eacute;lection La-Cale</h3>
               <span>{calaSelection ? 'G\u00e9n\u00e9r\u00e9e' : 'En attente'}</span>
             </div>
 
@@ -471,8 +472,8 @@ function App() {
               </div>
             ) : (
               <p className="cala-empty">
-                Clique sur &quot;S\u00e9lection La-Cale&quot; pour g\u00e9n\u00e9rer les cases \u00e0
-                cocher.
+                Clique sur &quot;S&eacute;lection La-Cale&quot; pour g&eacute;n&eacute;rer les cases
+                &agrave; cocher.
               </p>
             )}
           </div>
