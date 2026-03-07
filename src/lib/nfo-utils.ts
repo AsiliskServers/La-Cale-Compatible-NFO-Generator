@@ -297,7 +297,30 @@ const detectQuality = (videoTrack: TrackFields | undefined, rawNfo: string): str
   return '-'
 }
 
-const detectContainerFormat = (generalTrack: TrackFields, fileName: string): string => {
+const detectContainerFormat = (generalTrack: TrackFields, fileName: string, rawNfo: string): string => {
+  const normalizedFileName = normalizeText(fileName)
+  const normalizedRaw = normalizeText(rawNfo)
+  const sourceIdentity = `${normalizedFileName} ${normalizedRaw}`
+
+  if (/web[\s._-]*dl/.test(sourceIdentity)) {
+    return 'WEB-DL'
+  }
+  if (/web[\s._-]*rip/.test(sourceIdentity)) {
+    return 'WEBRip'
+  }
+  if (/(blu[\s._-]*ray|bdrip|bdremux|brrip)/.test(sourceIdentity)) {
+    return 'BluRay'
+  }
+  if (/remux/.test(sourceIdentity)) {
+    return 'REMUX'
+  }
+  if (/dvd[\s._-]*rip/.test(sourceIdentity)) {
+    return 'DVDRip'
+  }
+  if (/(^|[.\-_ ])tv(rip)?($|[.\-_ ])/.test(sourceIdentity)) {
+    return 'TV'
+  }
+
   const generalFormat = normalizeText(getFirstTrackValueByKeyTerms(generalTrack, ['format']))
 
   if (generalFormat.includes('matroska')) {
@@ -612,7 +635,7 @@ export const buildBbcodePreview = (rawNfo: string, file: File | null): string =>
   const firstVideoTrack = parsed.video[0]
 
   const quality = detectQuality(firstVideoTrack, rawNfo)
-  const format = detectContainerFormat(parsed.general, file?.name ?? '')
+  const format = detectContainerFormat(parsed.general, file?.name ?? '', rawNfo)
   const videoCodec = detectVideoCodec(firstVideoTrack)
   const audioCodec = detectAudioCodecs(parsed.audio)
   const languages = detectAudioLanguages(parsed.audio, file?.name ?? '')
