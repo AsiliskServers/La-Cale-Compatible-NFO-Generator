@@ -122,12 +122,6 @@ const normalizeMediainfoError = (error) => {
   return message
 }
 
-const withLanguageArg = (args) => {
-  if (mediainfoLanguage.toLowerCase() !== 'auto') {
-    args.push(`--Language=${mediainfoLanguage}`)
-  }
-}
-
 const buildMediainfoExecOptions = (maxBuffer, timeout) => ({
   windowsHide: true,
   timeout,
@@ -170,12 +164,37 @@ const isFrenchLanguageEnabled = async () => {
     ...buildMediainfoExecOptions(1024 * 1024, 10_000),
   })
 
-  const firstLine = stdout.split(/\r?\n/).find((line) => line.trim().length > 0) ?? ''
-  if (!firstLine) {
+  if (!stdout?.trim()) {
     return null
   }
 
-  return firstLine.trim().toLowerCase().startsWith('general') ? false : true
+  const normalized = stdout.toLowerCase()
+  const hasFrenchMarkers =
+    normalized.includes('nom complet') ||
+    normalized.includes('taille du fichier') ||
+    normalized.includes('duree') ||
+    normalized.includes('dur\u00e9e') ||
+    normalized.includes('dur?e') ||
+    normalized.includes('debit') ||
+    normalized.includes('d\u00e9bit') ||
+    normalized.includes('d?bit')
+
+  if (hasFrenchMarkers || isLikelyMangledFrenchText(stdout)) {
+    return true
+  }
+
+  const hasEnglishMarkers =
+    normalized.includes('complete name') ||
+    normalized.includes('file size') ||
+    normalized.includes('duration') ||
+    normalized.includes('overall bit rate')
+
+  if (hasEnglishMarkers) {
+    return false
+  }
+
+  // If language is explicitly forced (fr/file://...), avoid a false negative in the UI.
+  return mediainfoLanguage.toLowerCase() !== 'auto'
 }
 
 const upload = multer({
