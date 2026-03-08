@@ -1,6 +1,7 @@
 services:
   nfo-generator:
     container_name: nfo-generator
+    restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile
