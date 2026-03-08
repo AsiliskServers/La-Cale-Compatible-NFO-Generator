@@ -121,6 +121,19 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isCalaModalOpen])
 
+  useEffect(() => {
+    if (!isCalaModalOpen) {
+      return
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isCalaModalOpen])
+
   const analyzeInBrowser = async (file: File): Promise<string> => {
     const mediaInfo = await MediaInfoFactory({
       format: 'text',

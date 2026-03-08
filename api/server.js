@@ -251,7 +251,17 @@ app.get('/api/health', async (_req, res) => {
     const { stdout } = await execFileAsync(mediainfoBinary, ['--Version'], {
       ...buildMediainfoExecOptions(1024 * 1024, 10_000),
     })
-    const frenchLanguageEnabled = isFrenchLanguageConfigured() ? true : await isFrenchLanguageEnabled()
+    let frenchLanguageEnabled = null
+    if (isFrenchLanguageConfigured()) {
+      frenchLanguageEnabled = true
+    } else {
+      try {
+        frenchLanguageEnabled = await isFrenchLanguageEnabled()
+      } catch (error) {
+        // Language probing must never fail overall health when mediainfo itself is available.
+        console.warn('[nfo-api] french language probe failed:', error)
+      }
+    }
 
     res.json({
       ok: true,
