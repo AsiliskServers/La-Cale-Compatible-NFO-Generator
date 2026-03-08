@@ -122,6 +122,11 @@ const normalizeMediainfoError = (error) => {
   return message
 }
 
+const isFrenchLanguageConfigured = () => {
+  const normalized = mediainfoLanguage.toLowerCase()
+  return normalized === 'fr' || normalized.startsWith('fr-') || normalized.startsWith('file://')
+}
+
 const buildMediainfoExecOptions = (maxBuffer, timeout) => ({
   windowsHide: true,
   timeout,
@@ -246,7 +251,7 @@ app.get('/api/health', async (_req, res) => {
     const { stdout } = await execFileAsync(mediainfoBinary, ['--Version'], {
       ...buildMediainfoExecOptions(1024 * 1024, 10_000),
     })
-    const frenchLanguageEnabled = await isFrenchLanguageEnabled()
+    const frenchLanguageEnabled = isFrenchLanguageConfigured() ? true : await isFrenchLanguageEnabled()
 
     res.json({
       ok: true,
