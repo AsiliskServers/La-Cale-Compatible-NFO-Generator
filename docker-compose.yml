@@ -1,5 +1,6 @@
 services:
   nfo-generator:
+    container_name: nfo-generator
     build:
       context: .
       dockerfile: Dockerfile
