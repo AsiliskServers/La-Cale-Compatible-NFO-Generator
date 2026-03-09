@@ -1,12 +1,12 @@
 import { getFileExtension, isLikelyVideoFileName } from './file-utils'
-
-type TrackFields = Record<string, string[]>
-type ParsedMediaInfo = {
-  general: TrackFields
-  video: TrackFields[]
-  audio: TrackFields[]
-  text: TrackFields[]
-}
+import {
+  detectLanguageKey,
+  getTrackValuesByKeyTerms,
+  normalizeText,
+  parseIntegerFromValues,
+  parseMediaInfoText,
+  type LanguageKey,
+} from './mediainfo-utils'
 
 export type CalaSelection = Record<string, string[]>
 
@@ -28,196 +28,19 @@ export const CALA_CATEGORY_ORDER = [
 
 export const CALA_MANUAL_CATEGORIES = new Set(['Genres', 'Divers'])
 
-const normalizeText = (value: string): string =>
-  value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-
-const detectSection = (headerLine: string): keyof ParsedMediaInfo | 'menu' | null => {
-  const normalized = normalizeText(headerLine).replace(/\s*#\d+$/, '')
-  const compact = normalized.replace(/[^a-z0-9]/g, '')
-
-  if (compact === 'general' || compact === 'gnral') {
-    return 'general'
-  }
-  if (compact === 'video' || compact === 'vido') {
-    return 'video'
-  }
-  if (compact === 'audio') {
-    return 'audio'
-  }
-  if (compact === 'text' || compact === 'texte') {
-    return 'text'
-  }
-  if (compact === 'menu') {
-    return 'menu'
-  }
-
-  return null
-}
-
-const parseMediaInfoText = (raw: string): ParsedMediaInfo => {
-  const parsed: ParsedMediaInfo = {
-    general: {},
-    video: [],
-    audio: [],
-    text: [],
-  }
-
-  let currentSection: keyof ParsedMediaInfo | 'menu' | null = null
-  let currentTrack: TrackFields | null = null
-
-  for (const line of raw.split(/\r?\n/)) {
-    const trimmed = line.trim()
-    if (!trimmed) {
-      continue
-    }
-
-    const section = detectSection(trimmed)
-    if (section === 'general') {
-      currentSection = 'general'
-      currentTrack = parsed.general
-      continue
-    }
-    if (section === 'video' || section === 'audio' || section === 'text') {
-      currentSection = section
-      currentTrack = {}
-      parsed[section].push(currentTrack)
-      continue
-    }
-    if (section === 'menu') {
-      currentSection = 'menu'
-      currentTrack = null
-      continue
-    }
-
-    if (!currentSection || currentSection === 'menu' || !currentTrack) {
-      continue
-    }
-
-    const keyValue = line.match(/^(.+?)\s+:\s+(.*)$/)
-    if (!keyValue) {
-      continue
-    }
-
-    const key = keyValue[1]?.trim()
-    const value = keyValue[2]?.trim()
-    if (!key || !value) {
-      continue
-    }
-
-    currentTrack[key] ??= []
-    currentTrack[key].push(value)
-  }
-
-  return parsed
-}
-
-const getTrackValuesByKeyTerms = (track: TrackFields | undefined, keyTerms: string[]): string[] => {
-  if (!track) {
-    return []
-  }
-
-  const normalizedTerms = keyTerms.map(normalizeText)
-  const values: string[] = []
-
-  for (const [key, fieldValues] of Object.entries(track)) {
-    const normalizedKey = normalizeText(key)
-    if (normalizedTerms.some((term) => normalizedKey.includes(term))) {
-      values.push(...fieldValues)
-    }
-  }
-
-  return values
-}
-
-const parseIntegerFromValues = (values: string[]): number | null => {
-  for (const value of values) {
-    const digits = value.replace(/[^0-9]/g, '')
-    if (!digits) {
-      continue
-    }
-
-    const parsed = Number.parseInt(digits, 10)
-    if (Number.isFinite(parsed)) {
-      return parsed
-    }
-  }
-
-  return null
+const calaLanguageLabelByKey: Partial<Record<LanguageKey, string>> = {
+  fr: 'French',
+  en: 'English',
+  it: 'Italian',
+  ja: 'Japanese',
+  ko: 'Korean',
+  zh: 'Chinois',
+  es: 'Spanish',
 }
 
 const mapLanguageLabel = (value: string): string | null => {
-  const normalized = normalizeText(value)
-  const tokens = new Set(normalized.split(/[^a-z0-9]+/).filter(Boolean))
-
-  if (
-    normalized.includes('french') ||
-    normalized.includes('francais') ||
-    tokens.has('fr') ||
-    tokens.has('fra') ||
-    tokens.has('fre')
-  ) {
-    return 'French'
-  }
-
-  if (
-    normalized.includes('english') ||
-    normalized.includes('anglais') ||
-    tokens.has('en') ||
-    tokens.has('eng')
-  ) {
-    return 'English'
-  }
-
-  if (
-    normalized.includes('italian') ||
-    normalized.includes('italien') ||
-    tokens.has('it') ||
-    tokens.has('ita')
-  ) {
-    return 'Italian'
-  }
-
-  if (
-    normalized.includes('japanese') ||
-    normalized.includes('japonais') ||
-    tokens.has('ja') ||
-    tokens.has('jpn')
-  ) {
-    return 'Japanese'
-  }
-
-  if (
-    normalized.includes('korean') ||
-    normalized.includes('coreen') ||
-    tokens.has('ko') ||
-    tokens.has('kor')
-  ) {
-    return 'Korean'
-  }
-
-  if (
-    normalized.includes('chinese') ||
-    normalized.includes('chinois') ||
-    tokens.has('zh') ||
-    tokens.has('chi') ||
-    tokens.has('zho')
-  ) {
-    return 'Chinois'
-  }
-
-  if (
-    normalized.includes('spanish') ||
-    normalized.includes('espagnol') ||
-    tokens.has('es') ||
-    tokens.has('spa')
-  ) {
-    return 'Spanish'
-  }
-
-  return null
+  const key = detectLanguageKey(value)
+  return key ? calaLanguageLabelByKey[key] ?? null : null
 }
 
 const addSelectionValue = (selection: CalaSelection, category: string, value: string): void => {

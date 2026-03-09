@@ -1,3 +1,14 @@
+import {
+  detectLanguageKey,
+  getFirstTrackValueByKeyTerms,
+  getTrackValuesByKeyTerms,
+  normalizeText,
+  parseIntegerFromValues,
+  parseMediaInfoText,
+  type LanguageKey,
+  type TrackFields,
+} from './mediainfo-utils'
+
 const nonTeamTokens = new Set([
   'bluray',
   'bdrip',
@@ -32,134 +43,19 @@ const nonTeamTokens = new Set([
   'final',
 ])
 
+const languageLabelByKey: Record<LanguageKey, string> = {
+  fr: 'Fran\u00e7ais',
+  en: 'Anglais',
+  it: 'Italien',
+  ja: 'Japonais',
+  ko: 'Cor\u00e9en',
+  zh: 'Chinois',
+  es: 'Espagnol',
+  de: 'Allemand',
+}
+
 const normalizeTeamCandidate = (value: string): string =>
   value.toLowerCase().replace(/[\s._-]+/g, '')
-
-const normalizeText = (value: string): string =>
-  value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-
-type TrackFields = Record<string, string[]>
-type ParsedMediaInfo = {
-  general: TrackFields
-  video: TrackFields[]
-  audio: TrackFields[]
-  text: TrackFields[]
-}
-
-const detectSection = (headerLine: string): keyof ParsedMediaInfo | 'menu' | null => {
-  const normalized = normalizeText(headerLine).replace(/\s*#\d+$/, '')
-  const compact = normalized.replace(/[^a-z0-9]/g, '')
-
-  if (compact === 'general' || compact === 'gnral') {
-    return 'general'
-  }
-  if (compact === 'video' || compact === 'vido') {
-    return 'video'
-  }
-  if (compact === 'audio') {
-    return 'audio'
-  }
-  if (compact === 'text' || compact === 'texte') {
-    return 'text'
-  }
-  if (compact === 'menu') {
-    return 'menu'
-  }
-
-  return null
-}
-
-const parseMediaInfoText = (raw: string): ParsedMediaInfo => {
-  const parsed: ParsedMediaInfo = {
-    general: {},
-    video: [],
-    audio: [],
-    text: [],
-  }
-
-  let currentSection: keyof ParsedMediaInfo | 'menu' | null = null
-  let currentTrack: TrackFields | null = null
-
-  for (const line of raw.split(/\r?\n/)) {
-    const trimmed = line.trim()
-    if (!trimmed) {
-      continue
-    }
-
-    const section = detectSection(trimmed)
-    if (section === 'general') {
-      currentSection = 'general'
-      currentTrack = parsed.general
-      continue
-    }
-    if (section === 'video' || section === 'audio' || section === 'text') {
-      currentSection = section
-      currentTrack = {}
-      parsed[section].push(currentTrack)
-      continue
-    }
-    if (section === 'menu') {
-      currentSection = 'menu'
-      currentTrack = null
-      continue
-    }
-
-    if (!currentSection || currentSection === 'menu' || !currentTrack) {
-      continue
-    }
-
-    const keyValue = line.match(/^(.+?)\s+:\s+(.*)$/)
-    if (!keyValue) {
-      continue
-    }
-
-    const key = keyValue[1]?.trim()
-    const value = keyValue[2]?.trim()
-    if (!key || !value) {
-      continue
-    }
-
-    currentTrack[key] ??= []
-    currentTrack[key].push(value)
-  }
-
-  return parsed
-}
-
-const getTrackValuesByKeyTerms = (track: TrackFields | undefined, keyTerms: string[]): string[] => {
-  if (!track) {
-    return []
-  }
-
-  const normalizedTerms = keyTerms.map(normalizeText)
-  const values: string[] = []
-
-  for (const [key, fieldValues] of Object.entries(track)) {
-    const normalizedKey = normalizeText(key)
-    if (normalizedTerms.some((term) => normalizedKey.includes(term))) {
-      values.push(...fieldValues)
-    }
-  }
-
-  return values
-}
-
-const getFirstTrackValueByKeyTerms = (track: TrackFields | undefined, keyTerms: string[]): string => {
-  return getTrackValuesByKeyTerms(track, keyTerms)[0] ?? ''
-}
-
-const parseIntegerFromValue = (value: string): number | null => {
-  const digits = value.replace(/[^0-9]/g, '')
-  if (!digits) {
-    return null
-  }
-
-  const parsed = Number.parseInt(digits, 10)
-  return Number.isFinite(parsed) ? parsed : null
-}
 
 const parseSizeToBytes = (value: string): number | null => {
   const match = value.match(/([0-9]+(?:[.,][0-9]+)?)\s*(kib|mib|gib|tib|kb|mb|gb|tb)/i)
@@ -199,83 +95,13 @@ const formatBytesToGo = (bytes: number | null): string => {
 }
 
 const mapLanguageLabel = (value: string): string | null => {
-  const normalized = normalizeText(value)
-  const tokens = new Set(normalized.split(/[^a-z0-9]+/).filter(Boolean))
-
-  if (
-    normalized.includes('french') ||
-    normalized.includes('francais') ||
-    tokens.has('fr') ||
-    tokens.has('fra') ||
-    tokens.has('fre')
-  ) {
-    return 'Fran\u00e7ais'
-  }
-  if (
-    normalized.includes('english') ||
-    normalized.includes('anglais') ||
-    tokens.has('en') ||
-    tokens.has('eng')
-  ) {
-    return 'Anglais'
-  }
-  if (
-    normalized.includes('italian') ||
-    normalized.includes('italien') ||
-    tokens.has('it') ||
-    tokens.has('ita')
-  ) {
-    return 'Italien'
-  }
-  if (
-    normalized.includes('japanese') ||
-    normalized.includes('japonais') ||
-    tokens.has('ja') ||
-    tokens.has('jpn')
-  ) {
-    return 'Japonais'
-  }
-  if (
-    normalized.includes('korean') ||
-    normalized.includes('coreen') ||
-    tokens.has('ko') ||
-    tokens.has('kor')
-  ) {
-    return 'Cor\u00e9en'
-  }
-  if (
-    normalized.includes('chinese') ||
-    normalized.includes('chinois') ||
-    tokens.has('zh') ||
-    tokens.has('chi') ||
-    tokens.has('zho')
-  ) {
-    return 'Chinois'
-  }
-  if (
-    normalized.includes('spanish') ||
-    normalized.includes('espagnol') ||
-    tokens.has('es') ||
-    tokens.has('spa')
-  ) {
-    return 'Espagnol'
-  }
-  if (
-    normalized.includes('german') ||
-    normalized.includes('allemand') ||
-    tokens.has('de') ||
-    tokens.has('ger') ||
-    tokens.has('deu')
-  ) {
-    return 'Allemand'
-  }
-
-  return null
+  const key = detectLanguageKey(value)
+  return key ? languageLabelByKey[key] : null
 }
 
 const detectQuality = (videoTrack: TrackFields | undefined, rawNfo: string): string => {
-  const width = parseIntegerFromValue(getFirstTrackValueByKeyTerms(videoTrack, ['width', 'largeur']))
-  const height = parseIntegerFromValue(getFirstTrackValueByKeyTerms(videoTrack, ['height', 'hauteur']))
+  const width = parseIntegerFromValues(getTrackValuesByKeyTerms(videoTrack, ['width', 'largeur']))
+  const height = parseIntegerFromValues(getTrackValuesByKeyTerms(videoTrack, ['height', 'hauteur']))
 
   if ((height !== null && height >= 4320) || (width !== null && width >= 7600)) {
     return '4320p'

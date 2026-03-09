@@ -82,13 +82,16 @@ function App() {
   useEffect(() => {
     const controller = new AbortController()
     const timeoutId = window.setTimeout(() => controller.abort(), 3500)
+    const markServerUnavailable = (): void => {
+      setServerAvailable(false)
+      setServerFrenchReady(null)
+    }
 
     const checkServer = async () => {
       try {
         const response = await fetch(`${apiBase}/health`, { signal: controller.signal })
         if (!response.ok) {
-          setServerAvailable(false)
-          setServerFrenchReady(null)
+          markServerUnavailable()
           return
         }
 
@@ -101,8 +104,7 @@ function App() {
           setEngineMode('server')
         }
       } catch {
-        setServerAvailable(false)
-        setServerFrenchReady(null)
+        markServerUnavailable()
       } finally {
         window.clearTimeout(timeoutId)
       }
@@ -254,19 +256,23 @@ function App() {
     await processFile(file)
   }
 
+  const copyPreview = async (value: string, format: 'nfo' | 'bbcode'): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopiedNfo(format === 'nfo')
+      setCopiedBbcode(format === 'bbcode')
+    } catch (error) {
+      setErrorMessage('Impossible de copier automatiquement. Copie manuelle recommand\u00e9e.')
+      console.error(error)
+    }
+  }
+
   const handleCopyNfo = async (): Promise<void> => {
     if (!nfoPreview) {
       return
     }
 
-    try {
-      await navigator.clipboard.writeText(nfoPreview)
-      setCopiedNfo(true)
-      setCopiedBbcode(false)
-    } catch (error) {
-      setErrorMessage('Impossible de copier automatiquement. Copie manuelle recommand\u00e9e.')
-      console.error(error)
-    }
+    await copyPreview(nfoPreview, 'nfo')
   }
 
   const handleCopyBbcode = async (): Promise<void> => {
@@ -274,14 +280,7 @@ function App() {
       return
     }
 
-    try {
-      await navigator.clipboard.writeText(bbcodePreview)
-      setCopiedBbcode(true)
-      setCopiedNfo(false)
-    } catch (error) {
-      setErrorMessage('Impossible de copier automatiquement. Copie manuelle recommand\u00e9e.')
-      console.error(error)
-    }
+    await copyPreview(bbcodePreview, 'bbcode')
   }
 
   const handleDownload = (): void => {
