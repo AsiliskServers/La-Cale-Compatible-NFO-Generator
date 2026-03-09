@@ -5,7 +5,7 @@ COPY package*.json ./
 RUN npm ci --no-audit --no-fund
 
 COPY . .
-ARG VITE_BASE_PATH=/
+ARG VITE_BASE_PATH=./
 ENV VITE_BASE_PATH=${VITE_BASE_PATH}
 RUN npm run build
 

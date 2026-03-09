@@ -58,7 +58,13 @@ set -a
 source "${ENV_FILE}"
 set +a
 
-BUILD_BASE_PATH="${VITE_BASE_PATH:-${BASE_PATH:-/}}"
+if [[ -n "${VITE_BASE_PATH:-}" ]]; then
+  BUILD_BASE_PATH="${VITE_BASE_PATH}"
+elif [[ -n "${BASE_PATH:-}" && "${BASE_PATH}" != "/" ]]; then
+  BUILD_BASE_PATH="${BASE_PATH}"
+else
+  BUILD_BASE_PATH="./"
+fi
 
 echo "[1/4] Syncing project to ${APP_DIR}..."
 rsync -a --delete \

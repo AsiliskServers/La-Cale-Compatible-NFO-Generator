@@ -3,8 +3,16 @@ import react from '@vitejs/plugin-react'
 
 const normalizeBasePath = (value: string | undefined): string => {
   const raw = value?.trim()
-  if (!raw || raw === '/') {
+  if (!raw || raw === '.' || raw === './') {
+    return './'
+  }
+
+  if (raw === '/') {
     return '/'
+  }
+
+  if (raw.startsWith('./')) {
+    return raw.endsWith('/') ? raw : `${raw}/`
   }
 
   const trimmed = raw.replace(/^\/+|\/+$/g, '')

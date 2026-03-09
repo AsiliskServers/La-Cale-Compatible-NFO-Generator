@@ -23,6 +23,15 @@ type ApiHealth = {
   frenchLanguageEnabled?: boolean | null
 }
 
+const withPublicBase = (assetUrl: string): string => {
+  if (!assetUrl.startsWith('/')) {
+    return assetUrl
+  }
+
+  const base = import.meta.env.BASE_URL.replace(/\/+$/, '')
+  return base ? `${base}${assetUrl}` : assetUrl
+}
+
 const readApiError = async (response: Response): Promise<string> => {
   try {
     const payload = (await response.json()) as { error?: string }
@@ -48,6 +57,7 @@ function App() {
   const inputRef = useRef<HTMLInputElement>(null)
   const analysisRunId = useRef(0)
   const apiBase = import.meta.env.BASE_URL.replace(/\/+$/, '') + '/api'
+  const mediaInfoWasmResolvedUrl = withPublicBase(mediaInfoWasmUrl)
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [rawNfo, setRawNfo] = useState('')
@@ -138,7 +148,7 @@ function App() {
     const mediaInfo = await MediaInfoFactory({
       format: 'text',
       full: true,
-      locateFile: () => mediaInfoWasmUrl,
+      locateFile: () => mediaInfoWasmResolvedUrl,
     })
 
     try {
