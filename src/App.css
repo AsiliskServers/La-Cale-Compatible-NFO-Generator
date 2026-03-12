@@ -154,6 +154,15 @@
   box-shadow: 0 0 0 3px rgb(31 70 56 / 0.1);
 }
 
+.engine-option.disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.engine-option.disabled:hover {
+  transform: none;
+}
+
 .engine-hint {
   margin: 8px 2px 0;
   font-size: 0.82rem;

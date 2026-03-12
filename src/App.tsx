@@ -99,10 +99,6 @@ function App() {
         const isReady = payload.ok === true
         setServerAvailable(isReady)
         setServerFrenchReady(payload.frenchLanguageEnabled ?? null)
-
-        if (isReady) {
-          setEngineMode('server')
-        }
       } catch {
         markServerUnavailable()
       } finally {
@@ -117,6 +113,12 @@ function App() {
       window.clearTimeout(timeoutId)
     }
   }, [apiBase])
+
+  useEffect(() => {
+    if (serverAvailable === false && engineMode === 'server') {
+      setEngineMode('browser')
+    }
+  }, [engineMode, serverAvailable])
 
   useEffect(() => {
     if (!isCalaModalOpen) {
@@ -361,28 +363,33 @@ function App() {
                 />
                 <span>Navigateur (WASM)</span>
               </label>
-              <label className={`engine-option ${engineMode === 'server' ? 'selected' : ''}`}>
+              <label
+                className={`engine-option ${engineMode === 'server' ? 'selected' : ''} ${
+                  serverAvailable === true ? '' : 'disabled'
+                }`}
+              >
                 <input
                   type="radio"
                   name="engine-mode"
                   checked={engineMode === 'server'}
+                  disabled={serverAvailable !== true || isAnalyzing}
                   onChange={() => setEngineMode('server')}
                 />
-                <span>MediaInfo complet (serveur)</span>
+                <span>MediaInfo complet (serveur, upload)</span>
               </label>
             </div>
             <p className="engine-hint">
               {engineMode === 'browser'
                 ? 'Aucun upload : analyse 100% locale.'
-                : "Upload temporaire vers l'API MediaInfo CLI pour un rendu proche du logiciel."}
+                : "Mode optionnel : envoi temporaire du fichier complet vers l'API MediaInfo CLI pour un rendu proche du logiciel."}
             </p>
             <p className="engine-health">
               {serverAvailable === null
                 ? 'V\u00e9rification API en cours...'
                 : serverAvailable
                   ? serverFrenchReady === false
-                    ? 'API OK, mais langue FR inactive sur le serveur.'
-                    : 'API OK, moteur serveur actif.'
+                    ? 'API OK, upload serveur disponible, mais langue FR inactive.'
+                    : 'API OK, upload serveur disponible sur demande.'
                   : 'API indisponible : mode navigateur uniquement.'}
             </p>
           </div>
@@ -478,7 +485,7 @@ function App() {
               <p>
                 {engineMode === 'browser'
                   ? 'La g\u00e9n\u00e9ration est locale dans ton navigateur.'
-                  : "La g\u00e9n\u00e9ration passe par l'API serveur MediaInfo CLI."}
+                  : "La g\u00e9n\u00e9ration passe par l'API serveur MediaInfo CLI avec upload temporaire du fichier."}
               </p>
             </div>
           )}
